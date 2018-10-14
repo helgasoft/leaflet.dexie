@@ -192,12 +192,9 @@ var ControlSaveTiles = L.Control.extend( {
 	var self = this;
 	var tileUrl = self.status._tilesforSave.shift();
 	
-	//	without {mode: 'no-cors'} - err 'TypeError: Failed to fetch' on certain providers like tiles.wmflabs.org
-	//	with 'no-cors' - no errors, but blobs empty
-	const blob = await fetch(tileUrl.url).then   //, {mode: 'no-cors'}
+	const blob = await fetch(tileUrl.url).then
 		((res) => { return(res.blob()) }).catch(err => console.log(err));
 	if (!blob) return;
-	//self.status.lengthLoaded += 1;	//moved down
 	if (self.status.lengthLoaded == 0) {
 		if (self.status.tnames.indexOf(tblName) < 0)	// create new table on 1st tile and save all tiles into it
 			await self._extendSchema("+"+tblName).catch(err => console.log(err));
@@ -258,12 +255,10 @@ var ControlSaveTiles = L.Control.extend( {
 * @param  {object} baseLayer     {@link http://leafletjs.com/reference-1.2.0.html#tilelayer}
 * @property {Object} options
 * @property {string} [options.position] default topleft
-* @property {string} [options.saveText] html for save button, default +
-* @property {string} [options.rmText] html for remove button, deflault -
+* @property {string} [options.saveText] html for save button
+* @property {string} [options.rmText] html for remove button
 * @property {number} [options.maxZoom] maximum zoom level that will be reached when saving tiles
-* @property {boolean} [options.saveWhatYouSee] save the tiles that you see
-* on screen plus deeper zooms, ignores zoomLevels options. Default false
-* @property {function} [options.confirm] function called before confirm, default null.
+* @property {function} [options.confirmSave] function called before confirm, default null.
 * @property {function} [options.confirmRemoval] function called before confirm, default null
 * @return {ControlSaveTiles}
 */
@@ -285,9 +280,9 @@ var TileLayerOffline = L.TileLayer.extend( {
   /**
   * Create tile HTMLElement
   * @private
-  * @param  {array}   coords [description]
-  * @param  {Function} done   [description]
-  * @return {HTMLElement}          [description]
+  * @param  {array} coords
+  * @param  {Function} done
+  * @return {HTMLElement}     
   */
   createTile: function (coords, done) {
     var tile = L.TileLayer.prototype.createTile.call(this, coords, done);
@@ -304,8 +299,8 @@ var TileLayerOffline = L.TileLayer.extend( {
   },
   /**
    * dataurl from localstorage
-   * @param {DomElement} tile [description]
-   * @param {string} url  [description]
+   * @param {DomElement} tile 
+   * @param {string} url  
    * @return {Promise} resolves to base64 url
    */
   _setDataUrl: function (tile, url) {
@@ -377,7 +372,7 @@ var TileLayerOffline = L.TileLayer.extend( {
 
 /**
  * @function L.tileLayer.offline
- * @param  {string} url     [description]
+ * @param  {string} url  
  * @param  {object} options {@link http://leafletjs.com/reference-1.2.0.html#tilelayer}
  * @return {TileLayerOffline}      an instance of TileLayerOffline
  */

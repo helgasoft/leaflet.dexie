@@ -94,7 +94,7 @@ function ctrlButton(html, container, fn) {
 	}
 
 	// baselayer will use offline source if available
-	var baseLayer = L.tileLayer.offline('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	var baseLayer = L.tileLayer.offline('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 	    attribution: 'Map data &copy; OpenStreetMap',
 	    subdomains: 'abc',
 	    maxZoom: 16
