@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaflet.Dexie.js Demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+    <script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>   
+    <script src="https://unpkg.com/dexie/dist/dexie.min.js"></script>
+    <script src="dist/leaflet.dexie.min.js"></script>
+</head>
+
+<body>
+  <div class="container-fluid" style="max-width:1000px; margin-left:20px;">
+    <div class="row">
+      <div class="col-md-12">
+      Demo <a class="navbar-brand" href="https://github.com/helgasoft/leaflet.dexie">leaflet.dexie</a>- offline maps<br />
+      &#x2780; Zoom to area of interest. Zoom level will show under green button. Level 14+ recommended.<br />
+      &#x2781; Hit button Download, name the table, observe tile save progress on the counter outside the map.<br />
+      &nbsp; &nbsp; <i>hint: remember zoom level or include it in table's name, so it's easily retrievable in offline mode.</i><br />
+      &#x2782; Hit green button to toggle Offline, select a table from the list, zoom to its minimal level to see tiles.<br />
+      &nbsp; &nbsp; <i>hint: zoom in/out with buttons, not mouse, to remain in offline map center</i>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-9">
+		<div id="map" style="height: 75vh"></div>
+      </div>
+      <div class="col-md-3">
+		<p>Progress: <span id="progress"></span> / <span id="total"></span></p>
+		<p>Current storage: <span id="storage"></span> items</p>
+		<p><div id="selmap"></div></p>
+		<div id='tblList' style='margin-left:12px;'></div>
+      </div>
+    </div>
+  </div>
+
+<script type="text/javascript">
+
+function showTables() {		// display offline map names with radiobuttons
+
+	if (saveControl.status.tnames.length==0) {
+		selmap.innerHTML = 'No offline maps';
+		return;
+	}
+	document.getElementById('tblList').innerHTML = '';
+
+	for (var i = 0; i < saveControl.status.tnames.length; i++) {
+		lab = document.createElement("label");
+		x = document.createElement("input");
+		x.setAttribute("type", "radio");
+		x.setAttribute("name", "mona");
+		x.value = saveControl.status.tnames[i];
+		x.checked = false;
+		x.onchange = tblSelected;
+		y = document.createElement("span");
+		y.innerHTML = saveControl.status.tnames[i];
+		lab.appendChild(x);
+		lab.appendChild(y);
+		document.getElementById('tblList').appendChild(lab);
+		z = document.createElement("br");
+		document.getElementById('tblList').appendChild(z);
+	}
+}
+
+function tblSelected() {	// set center to selected offline map
+	tblName = document.querySelector('input[name=mona]:checked').value;
+	if (tblName != '') {
+		saveControl.setTable(tblName);
+		saveControl.setStorageSize();
+		saveControl.getItem('centerLatLon').then(function(value) {
+			if (Array.isArray(value)) {
+				tmp = L.marker(value);
+				map.setView(tmp.getLatLng());
+				baseLayer.center = tmp.getLatLng();
+			}
+		}).catch(err => console.log(err));
+	}
+}
+
+function toggleOffline() {	// toggle online/offline testing
+	baseLayer.offtest = !baseLayer.offtest;
+	L.DomUtil.get('offButton').style.backgroundColor = baseLayer.offtest ? 'pink' : 'lightgreen';
+}
+
+function ctrlButton(html, container, fn) {
+		var link = L.DomUtil.create('a', null, container);
+		link.innerHTML = html;
+		link.href = '#';
+		L.DomEvent.on(link, 'click', fn);
+		return link;
+	}
+
+	// baselayer will use offline source if available
+	var baseLayer = L.tileLayer.offline('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	    attribution: 'Map data &copy; OpenStreetMap',
+	    subdomains: 'abc',
+	    maxZoom: 16
+	});
+
+	// events while saving map tiles
+	var progress;
+	baseLayer.on('savestart', function(e) {
+		progress = 0;
+		document.getElementById("total").innerHTML = e._tilesforSave.length;
+	});
+	baseLayer.on('savetileend', function(e) {
+		progress++;
+		document.getElementById('progress').innerHTML = progress;
+	});
+	baseLayer.on('storagesize', function(e) {
+		document.getElementById('storage').innerHTML = e.storagesize;
+	});
+	baseLayer.on('tblevent', function(e) {
+		showTables();
+	});
+	baseLayer.on('loadend', function(e) {	// all tiles were saved
+		saveControl.putItem('centerLatLon', [map.getCenter().lat, map.getCenter().lng]);
+	});
+
+	// optional tile image for unaccessible tiles in offline testing
+	var img = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAA+SURBVChTYzh8+PB/BgIArgafYgw5bIpxGoAsgc8WMAApwKaICUqTBoiyGpsEhhhO3UAAl8OnCAYOHz78HwDR+TsTGQH1JAAAAABJRU5ErkJggg==';
+	fetch(img).then(res => res.blob()).then((blob) => { 
+		var url = URL.createObjectURL(blob);
+		baseLayer.options.offUrl = url;
+	});
+
+	// command buttons for saveControl
+    	var scContainer = L.DomUtil.create('div', 'leaflet-bar');
+    	ctrlButton('<i class="fa fa-download" aria-hidden="true" title="Save tiles"></i>', scContainer, 
+    	    function() {
+    		if (map.getZoom() >= saveControl.options.minimalZoom) 
+    			saveControl.saveMap();
+		else 
+			confirm('Offline maps allowed minimal zoom level is set to '+saveControl.options.minimalZoom);
+    	});
+    	ctrlButton('<i class="fa fa-trash" aria-hidden="true"  title="Remove table"></i>', scContainer, () => {saveControl.rmContent();} );
+
+	// add control to save/delete offline maps in area viewed
+	var saveControl = L.control.savetiles(baseLayer, {
+	    minimalZoom: 10,
+	    //zoomlevels: [13,14,16], 	//optional specific zoomlevels to save
+	    confirmSave: function(status, saveCallback) {
+	    	var zrange = saveControl.options.zoomlevels ? saveControl.options.zoomlevels.join(',') : map.getZoom() +
+	    		 (map.getZoom()==saveControl._baseLayer.options.maxZoom ? '' : '-'+saveControl._baseLayer.options.maxZoom);
+		var newTname = prompt("Storage name for "+status._tilesforSave.length+" tiles (zoom "+zrange+")", "name1");
+		if (newTname == null || newTname == "") {
+			return;  // user cancelled the prompt
+		}
+		if (status.tnames.indexOf(newTname) >= 0)
+			if (!confirm('Map "' + newTname + '" exists. Overwrite?')) {
+				return;
+			}
+		saveCallback(newTname);
+	    },
+	    confirmRemoval: function(layer, successCallback) {
+		sel = document.querySelector('input[name=mona]:checked');
+		if (!sel) sel = document.querySelector('input[name=mona]')
+		if (!sel) return;
+		if (window.confirm('Delete table "' + sel.value + '" ?')) {
+			saveControl.deleteTable(sel.value);
+		}
+	    },
+	    visualUI: scContainer	// control 'invisible' if this line is commented out
+	});
+	saveControl.openDB();
+
+	// offline-testing button
+	var offBtn = L.control({position: 'topleft'});
+	offBtn.onAdd = function () {
+	    var container = L.DomUtil.create('div', 'leaflet-bar');
+	    var link = L.DomUtil.create('a', null, container); 
+	    link.innerHTML = '<i class="fa fa-podcast" aria-hidden="true" title="Test On/Offline"></i>';
+	    link.style.backgroundColor = 'lightgreen';
+	    link.id = 'offButton';
+	    link.href = '#';
+	    var zum = L.DomUtil.create('div', null, container);
+	    zum.id = 'zoomValue';
+	    L.DomEvent.on(link, 'click', toggleOffline, this);
+	    return container;
+	};
+	
+	var map = L.map('map');
+	baseLayer.addTo(map);
+	saveControl.addTo(map);
+	offBtn.addTo(map);
+	map.on('zoomend', function(e) {
+		document.getElementById('zoomValue').innerHTML = '&nbsp; z:'+map.getZoom();
+	});
+	map.setView({ lat: 47.257205, lng: 3.684256 }, 14);
+
+</script>
+</body>
+
+</html>

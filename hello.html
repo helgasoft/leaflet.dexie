@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+ <head>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>   
+	<script src="https://unpkg.com/dexie/dist/dexie.min.js"></script>
+	<script src="leaflet.dexie.js"></script>
+ </head>
+ <body>
+	<div id="map" style="height: 75vh"></div>
+	press F12 to open Inspector, watch indexedDB in tab <i>Application</i>(Chrome) or <i>Storage</i>(FF)
+  <script>
+	var baseLayer = L.tileLayer.offline('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxZoom: 16});
+	var control = L.control.savetiles(baseLayer, {});
+
+	var map = L.map('map');
+	baseLayer.addTo(map);
+	control.addTo(map);
+	const tblName = 'test';
+	control._db.version(1).stores( { [tblName]: '' });	// create table
+	control.openDB().then(() => {
+		control.setTable(tblName);
+		control.putItem('mapCenter', { lat: 47.2572, lng: 3.6842 });		// write
+	}).then(() => {
+		control.getItem('mapCenter').then(value => map.setView(value, 14));	// read
+	}).catch(err => alert(err.message));
+  </script>
+ </body>
+</html>
