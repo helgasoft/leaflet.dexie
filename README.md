@@ -1,6 +1,9 @@
 Leaflet.dexie.js
 ================
-A Leaflet plugin for local persistant storage using library [Dexie.js](https://github.com/dfahlander/Dexie.js).
+A Leaflet plugin for offline maps storage using library [Dexie.js](https://github.com/dfahlander/Dexie.js).
+
+The source code is based on [leaflet.offline](https://github.com/allartk/leaflet.offline), which uses [localForage](https://github.com/localForage/localForage) to access indexedDB. 
+&emsp; In our opinion (after lots of coding & testing), [Dexie.js](https://github.com/dfahlander/Dexie.js) is a better solution than localForage - smaller size, efficient and well supported.
 
 ### Demo
 The [Demo](https://helgasoft.github.io/leaflet.dexie/index.html) implements creation and deletion of offline maps and can simulate offline map display.
@@ -17,9 +20,9 @@ The [Demo](https://helgasoft.github.io/leaflet.dexie/index.html) implements crea
  </head>
  <body>
 	<div id="map" style="height: 75vh"></div>
-	press F12 to open Inspector, watch indexedDB in tab <i>Application</i>(Chrome) or <i>Storage</i>(FF)
+	press F12 to inspect, watch IndexedDB in tab <i>Application</i>(Chrome), <i>Storage</i>(FF) or <i>Debugger</i>(Edge)
   <script>
-	var baseLayer = L.tileLayer.offline('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxZoom: 16});
+	var baseLayer = L.tileLayer.offline('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxZoom: 16});
 	var control = L.control.savetiles(baseLayer, {});
 
 	var map = L.map('map');
@@ -39,9 +42,6 @@ The [Demo](https://helgasoft.github.io/leaflet.dexie/index.html) implements crea
 </html>
 ```
 
-The source code is based on [leaflet.offline](https://github.com/allartk/leaflet.offline), which uses [localForage](https://github.com/localForage/localForage) to access indexedDB. 
-&emsp; In our opinion (after lots of coding & testing), [Dexie.js](https://github.com/dfahlander/Dexie.js) is a better solution than localForage - smaller size, efficient and well supported.
-
 ### Usage
 Main usage is for offline maps, but could be also used to store other Leaflet information.
 
@@ -50,7 +50,7 @@ Download [leaflet.dexie.min.js](https://github.com/helgasoft/leaflet.dexie/blob/
 
 ### IndexedDB
 [indexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) is the standard database in the browser.
-Press F12 to open inspection, watch indexedDB in tab *Application*(Chrome) or *Storage*(FF).
+Press F12 to open inspection, watch IndexedDB in tab *Application*(Chrome), *Storage*(FF) or *Debugger*(Edge).
 
 ![indexedDB table](devtools.png)
 

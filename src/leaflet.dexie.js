@@ -3,7 +3,7 @@
 	advantages for local data storage: 
 		uses stable, small-size library Dexie.js
 		save offline maps from different providers, supports offline testing
-		store/retrieve any data in a table with putItem/getItem
+		store/retrieve any table data with putItem/getItem
 */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(require('leaflet')) :
@@ -30,11 +30,12 @@ var ControlSaveTiles = L.Control.extend( {
     _tilesforSave: null,
     mapSize: null,
     currMinZoom: null,
-    tnames: []			// names of all DB tables
+    tnames: []				// names of all DB tables
   },
   _db: new Dexie('leaflet-maps'),	// IndexedDB database
   _dbversion: 1,
-  dtable: null,			// current DB table
+  dtable: null,				// current DB table
+  dterr: new Error('dtable not set'),
   
   initialize: function (baseLayer, options) {
     this._baseLayer = baseLayer;
@@ -74,12 +75,15 @@ var ControlSaveTiles = L.Control.extend( {
 	}).catch(function(rej) {  console.log(rej); });	
   },
   putItem: function (key, value) {	// insert and update in one command
+  	if (this.dtable==null) throw this.dterr;
   	this.dtable.put(value, key);
   },
   getItem: function (key) {
+  	if (this.dtable==null) throw this.dterr;
   	return this.dtable.get(key);
   },
   deleteItem: function (key) {
+  	if (this.dtable==null) throw this.dterr;
   	return this.dtable.delete(key);
   },
 
@@ -127,7 +131,7 @@ var ControlSaveTiles = L.Control.extend( {
     } else {
 	var currentZoom = this._map.getZoom();
 	if (currentZoom < this.options.minimalZoom) {
-		throw new Error('Not allowed to save with zoom level below '+ this.options.minimalZoom); //test...
+		throw new Error('Not allowed to save with zoom level below '+ this.options.minimalZoom);
 	}
 	var maxZoom = 	this._map.options.maxZoom || 
 			this._baseLayer.options.maxZoom || 
@@ -172,6 +176,7 @@ var ControlSaveTiles = L.Control.extend( {
   
   setStorageSize: function (callback) {
     var self = this;
+    if (this.dtable==null) throw this.dterr;
     this.dtable.count().then(function (numberOfKeys) {
       self.status.storagesize = numberOfKeys;
       self._baseLayer.fire('storagesize', self.status);
@@ -218,7 +223,7 @@ var ControlSaveTiles = L.Control.extend( {
 
   _saveTile: function (tileUrl, blob) {
 	var self = this;
-	if (!this.dtable) return;
+	if (this.dtable==null) return;
 	this.dtable.put(blob, tileUrl).then(() => {	// store the binary data
 		self.status.lengthSaved++;
 		self._baseLayer.fire('savetileend', self.status);
@@ -229,7 +234,7 @@ var ControlSaveTiles = L.Control.extend( {
 	}).catch(err => console.log(err)); 
   },
 
-  _extendSchema: async function (tbl) {		// replace db schema in Dexie.js
+  _extendSchema: async function (tbl) {			// replace db schema in Dexie.js
   	// add: prefix table name with "+", delete: table name only
 	this._db.close();
 	var currSchema = this.status.tnames.reduce(function(obj, v) { obj[v] = ''; return obj; }, {})
@@ -306,13 +311,18 @@ var TileLayerOffline = L.TileLayer.extend( {
   _setDataUrl: function (tile, url) {
     var self = this;
     return new Promise(function (resolve, reject) {
-	if (!self.dtable) reject();
-	self.dtable.get(self._getStorageKey(url)).then(function (data) {
-		if (data && typeof data === 'object') {
-			resolve(URL.createObjectURL(data));
-		} else 
-			reject();
-	}).catch((e) => { reject(e); });   //console.log(e); 
+	if (self.dtable == null) {
+	    reject();
+	}
+	else {
+	    self.dtable.get(self._getStorageKey(url)).then(function (data) {
+	        if (data && typeof data === 'object') {
+	            resolve(URL.createObjectURL(data));
+	        } else {
+	            reject();
+	        }
+	    }).catch((e) => { reject(e); }); 
+	}
     }); //dont catch here, handled upstream
   },
   /**

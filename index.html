@@ -20,8 +20,9 @@
       &#x2780; Zoom to area of interest. Zoom level will show under green button. Level 14+ recommended.<br />
       &#x2781; Hit button Download, name the table, observe tile save progress on the counter outside the map.<br />
       &nbsp; &nbsp; <i>hint: remember zoom level or include it in table's name, so it's easily retrievable in offline mode.</i><br />
-      &#x2782; Hit green button to toggle Offline, select a table from the list, zoom to its minimal level to see tiles.<br />
-      &nbsp; &nbsp; <i>hint: zoom in/out with buttons, not mouse, to remain in offline map center</i>
+      &#x2782; Hit green button <i class="fa fa-podcast"></i> to toggle Offline, select a table from the list, zoom to its minimal level to see tiles.<br />
+      &nbsp; &nbsp; <i>hint: zoom in/out with the &plusmn; buttons, not mouse wheel, to remain in offline map center</i><br />
+      &#x2783; Pan in all directions to see map edges.<br /> &nbsp;
       </div>
     </div>
     <div class="row">
@@ -31,8 +32,7 @@
       <div class="col-md-3">
 		<p>Progress: <span id="progress"></span> / <span id="total"></span></p>
 		<p>Current storage: <span id="storage"></span> items</p>
-		<p><div id="selmap"></div></p>
-		<div id='tblList' style='margin-left:12px;'></div>
+		<div id='tblList' style='margin-left:12px;'>No offline maps</div>
       </div>
     </div>
   </div>
@@ -42,7 +42,7 @@
 function showTables() {		// display offline map names with radiobuttons
 
 	if (saveControl.status.tnames.length==0) {
-		selmap.innerHTML = 'No offline maps';
+		document.getElementById('tblList').innerHTML = 'No offline maps';
 		return;
 	}
 	document.getElementById('tblList').innerHTML = '';
@@ -56,7 +56,7 @@ function showTables() {		// display offline map names with radiobuttons
 		x.checked = false;
 		x.onchange = tblSelected;
 		y = document.createElement("span");
-		y.innerHTML = saveControl.status.tnames[i];
+		y.innerHTML = ' '+ saveControl.status.tnames[i];
 		lab.appendChild(x);
 		lab.appendChild(y);
 		document.getElementById('tblList').appendChild(lab);
@@ -153,7 +153,7 @@ function ctrlButton(html, container, fn) {
 			if (!confirm('Map "' + newTname + '" exists. Overwrite?')) {
 				return;
 			}
-		saveCallback(newTname);
+			saveCallback(newTname);
 	    },
 	    confirmRemoval: function(layer, successCallback) {
 		sel = document.querySelector('input[name=mona]:checked');
@@ -189,7 +189,7 @@ function ctrlButton(html, container, fn) {
 	map.on('zoomend', function(e) {
 		document.getElementById('zoomValue').innerHTML = '&nbsp; z:'+map.getZoom();
 	});
-	map.setView({ lat: 47.257205, lng: 3.684256 }, 14);
+	map.setView({ lat: 47.257205, lng: 3.684256 }, 15);
 
 </script>
 </body>
