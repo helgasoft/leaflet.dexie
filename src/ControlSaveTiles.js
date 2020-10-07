@@ -28,7 +28,7 @@ import L from 'leaflet';
  
 var ControlSaveTiles = L.Control.extend( {
   options: {
-    maxZoom: 19,
+    maxZoom: 20,
     minimalZoom: 8,		// minimal zoom to prevent the user from saving the World (and freeze computer)
     zoomlevels: null,	// zoomlevels have higher priority than maxZoom
     bounds: null,		// LatLngBounds of map to save {@link https://leafletjs.com/reference-0.7.7.html#latlngbounds}
@@ -56,7 +56,7 @@ var ControlSaveTiles = L.Control.extend( {
   },
 
   onAdd: function () {
-	var options = this.options;
+	let options = this.options;
 	if (options.visualUI)
 		return options.visualUI;	// rem...
 	return L.DomUtil.create('div'); 	// 'invisible' by default
@@ -67,16 +67,17 @@ var ControlSaveTiles = L.Control.extend( {
    * @return {boolean} result - false when not found or error
    */
   openDB: async function() {
-    var self = this;
+    let self = this;
     await this._db.open().then(function () {	// init all
-	console.log ("Found database: " + self._db.name + " version: " + self._db.verno);
-	self._dbversion = self._db.verno;
-	self._db.tables.forEach(function (table) {
-		self.status.tnames.push(table.name);
-	});
-	console.log(self._db.name + ' tables: ' + self.status.tnames.join(' ') );
-	self.baseLayer.fire('tblevent', self.status);
-	return true;
+		console.log ("Found database: " + self._db.name + " version: " + self._db.verno);
+		self._dbversion = self._db.verno;
+		self.status.tnames = [];
+		self._db.tables.forEach(function (table) {
+			self.status.tnames.push(table.name);
+		});
+		console.log(self._db.name + ' tables: ' + self.status.tnames.join(' ') );
+		self.baseLayer.fire('tblevent', self.status);
+		return true;
     }).catch('NoSuchDatabaseError', function(e) {
 		console.log ("Database not found, will be created with first table.");
 		return false;
@@ -84,7 +85,6 @@ var ControlSaveTiles = L.Control.extend( {
 		console.log ("Oh uh: " + e);
 		return false;
     });
-
   },
   /**
   * Set a baseLayer, also this Control and its baseLayer to have the same DB table
@@ -106,19 +106,19 @@ var ControlSaveTiles = L.Control.extend( {
   /**
   * Delete a table from DB
   * @param  {string} table name
-  * @return {Promise} fires 'tblevent'
+  * @return {Promise<void>} fires event 'tblevent' to refresh table list
   */
   deleteTable: function (tname) {
-  	var self = this;
+  	let self = this;
 	this._extendSchema(tname).then(function() {
 		console.log('dropped: '+ tname);
-        	self.baseLayer.fire('tblevent', tname);
+        self.baseLayer.fire('tblevent', tname);
 	}).catch(function(rej) {  console.log(rej); });	
   },
   /**
   * Add/Update an item in DB table
   * @param  {string} table name
-  * @return {Promise} operation result
+  * @return {Promise<void>} operation result
   */
   putItem: function (key, value) {	// insert and update in one command
   	if (this.dtable==null) throw this._dterr;
@@ -127,7 +127,7 @@ var ControlSaveTiles = L.Control.extend( {
   /**
   * Get an item in DB table
   * @param  {string} table name
-  * @return {Promise} operation result
+  * @return {Promise<void>} operation result
   */
   getItem: function (key) {
   	if (this.dtable==null) throw this._dterr;
@@ -136,7 +136,7 @@ var ControlSaveTiles = L.Control.extend( {
   /**
   * Delete an item in DB table
   * @param  {string} table name
-  * @return {Promise} operation result
+  * @return {Promise<void>} operation result
   */
   deleteItem: function (key) {
   	if (this.dtable==null) throw this._dterr;
@@ -158,65 +158,13 @@ var ControlSaveTiles = L.Control.extend( {
   setBounds: function (bounds) {
     this.options.bounds = bounds;
   },
-
-  /**
-  * Save all map tiles in DB async after name confirmation. Fires event 'savestart'.
-  */
-  saveMap: function() {
-  
-    var zoomlevels = [];
-    if (this.options.zoomlevels) {	// zoomlevels have higher priority than maxZoom
-	zoomlevels = this.options.zoomlevels; 
-    } else {
-	var currentZoom = this._map.getZoom();
-	if (currentZoom < this.options.minimalZoom) {
-		throw new Error('Not allowed to save with zoom level below '+ this.options.minimalZoom);
-	}
-	var maxZoom = 	this.baseLayer.options.maxZoom || 
-			this._map.options.maxZoom ||
-			this.options.maxZoom ||
-			currentZoom;
-	for (var zoom = currentZoom; zoom <= maxZoom; zoom++) {
-		zoomlevels.push(zoom);
-	}
-    }
-    
-    var latlngBounds = this.options.bounds || this._map.getBounds();
-
-    var bnds;
-    var tiles = [];
-    for (var i = 0; i < zoomlevels.length; i++) {
-      if (zoomlevels[i] < this.options.minimalZoom) continue;
-      bnds = L.bounds(
-        this._map.project(latlngBounds.getNorthWest(), zoomlevels[i]),
-        this._map.project(latlngBounds.getSouthEast(), zoomlevels[i])
-      );
-      tiles = tiles.concat(this.baseLayer.getTileUrls(bnds, zoomlevels[i]));
-    }
-    this._resetStatus(tiles);
-    this.status.currMinZoom = zoomlevels[0];
-    
-    //var self = this;
-    const saveCallback = async (tblName) => {
-	// user confirmed 'Save tiles?'
-	this.baseLayer.fire('savestart', this.status);
-
-	await Promise.all(tiles.map(async (tile) => {
-		await this._loadTile(tblName, tile)
-	}));
-    };
-    
-    if (this.options.confirmSave) {
-      this.options.confirmSave(this.status, saveCallback);
-    } //else { saveCallback(); }
-  },
   
   /**
-  * Sets status.storagesize to count of table rows
+  * Sets status.storagesize equal to count of table rows
   * @param  {callback} function to get the count
   */
   setStorageSize: function (callback) {
-    var self = this;
+    let self = this;
     if (this.dtable==null) throw this._dterr;
     this.dtable.count().then(function (numberOfKeys) {
       self.status.storagesize = numberOfKeys;
@@ -232,53 +180,76 @@ var ControlSaveTiles = L.Control.extend( {
 	this.status.lengthToBeSaved = tiles.length;
 	this.status.lengthSaved = 0;
 	this.status._tilesforSave = tiles
+	this.status.mapSize = 0;
   },
-  
-  _loadTile: async function(tblName, tileUrl) {		// recursively load all tiles for one subdomain
-	var self = this;
 
-	if (self.status.lengthLoaded == 0) {
-		if (self.status.tnames.indexOf(tblName) < 0)	// create new table on 1st tile and save all tiles into it
-			await self._extendSchema("+"+tblName).catch(err => console.log(err));
-		else						//overwrite existing table
-			await self._db.table(tblName).clear().catch(err => console.log(err));
-		self.dtable = self._db.table(tblName);		// needed here by _saveTile
-		self.status.mapSize = 0;
-	}
-	self._downloadTile(tileUrl.url).then((blob) => {
-	  self._saveTile(tileUrl.key, blob);
-	  self.status.mapSize += blob.size;
-	  self.status.lengthLoaded += 1;
-	  //self.baseLayer.fire('loadtileend', self.status);
-	  if (self.status.lengthLoaded === self.status.lengthToBeSaved) {
-		console.log("New table " + self.dtable.name);
-		self.baseLayer.fire('loadend', self.status);
-	  }
-	});
-/*      	
-	const blob = await fetch(tileUrl.url).then
-		((res) => { return(res.blob()) }).catch(err => console.log(err));
-	if (!blob) return;
-	if (self.status.lengthLoaded == 0) {
-		if (self.status.tnames.indexOf(tblName) < 0)	// create new table on 1st tile and save all tiles into it
-			await self._extendSchema("+"+tblName).catch(err => console.log(err));
-		else						//overwrite existing table
-			await self._db.table(tblName).clear().catch(err => console.log(err));
-		self.dtable = self._db.table(tblName);		// needed here by _saveTile
-		self.status.mapSize = 0;
-	}
-	self._saveTile(tileUrl.key, blob);
-	self.status.mapSize += blob.size;
-	self.status.lengthLoaded++;
-	if (self.status._tilesforSave.length > 0) {
-		self._loadTile(tblName).catch(err => console.log(err));
-	} else {
-		if (self.status.lengthLoaded === self.status.lengthToBeSaved) {
-			console.log("New table " + self.dtable.name);
-			self.baseLayer.fire('loadend', self.status);
+  /**
+   * Prepare zoom levels to download and activate callback function to
+   * save(async) all map tiles on table name confirmation. Fires event 'savestart'.
+  */
+  saveMap: function() {
+  
+    let zoomlevels = [];
+    if (this.options.zoomlevels) {			// zoomlevels have higher priority than maxZoom
+		zoomlevels = this.options.zoomlevels; 
+    } else {
+		let currentZoom = this._map.getZoom();
+		if (currentZoom < this.options.minimalZoom) {
+			throw new Error('Not allowed to save with zoom level below '+ this.options.minimalZoom);
 		}
-	} 
-*/
+		let maxZoom = 	this.baseLayer.options.maxZoom || 
+			this._map.options.maxZoom ||
+			this.options.maxZoom ||
+			currentZoom;
+		for (var zoom = currentZoom; zoom <= maxZoom; zoom++) {
+			zoomlevels.push(zoom);
+		}
+    }
+    
+    let latlngBounds = this.options.bounds || this._map.getBounds();
+
+    let bnds;
+    let tiles = [];
+    for (var i = 0; i < zoomlevels.length; i++) {
+      if (zoomlevels[i] < this.options.minimalZoom) continue;
+      bnds = L.bounds(
+        this._map.project(latlngBounds.getNorthWest(), zoomlevels[i]),
+        this._map.project(latlngBounds.getSouthEast(), zoomlevels[i])
+      );
+      tiles = tiles.concat(this.baseLayer.getTileUrls(bnds, zoomlevels[i]));
+    }
+    this._resetStatus(tiles);
+    this.status.currMinZoom = zoomlevels[0];
+    
+    const saveCallback = async (tblName) => {
+		// user confirmed 'Save table?'
+		this.baseLayer.fire('savestart', this.status);
+
+		if (this.status.tnames.indexOf(tblName) < 0)	// create new table on 1st tile and save all tiles into it
+			await this._extendSchema("+"+tblName).catch(err => console.log(err));
+		else											//overwrite existing table
+			await this._db.table(tblName).clear().catch(err => console.log(err));
+		//this.dtable = this._db.table(tblName);			// needed here by _saveTile
+		this.setTable(tblName);
+
+		await Promise.all(tiles.map(async (tile) => {
+			let self = this;
+			await self._downloadTile(tile.url).then((blob) => {
+				self._saveTile(tile.key, blob);
+				self.status.mapSize += blob.size;
+				self.status.lengthLoaded += 1;
+				//self.baseLayer.fire('loadtileend', self.status);
+				if (self.status.lengthLoaded === self.status.lengthToBeSaved) {
+				  console.log("New table " + self.dtable.name);
+				  self.baseLayer.fire('loadend', self.status);
+				}
+			})
+		}));
+    };
+    
+    if (this.options.confirmSave) {
+      this.options.confirmSave(this.status, saveCallback);
+    }
   },
 
   _downloadTile: function(tileUrl) {		// download one tile by url
@@ -291,11 +262,11 @@ var ControlSaveTiles = L.Control.extend( {
   },
 
   _saveTile: function (tileUrl, blob) {		// save one tile by URL key
-	var self = this;
+	let self = this;
 	if (this.dtable==null) return;
 	this.dtable.put(blob, tileUrl).then(() => {	// store the binary data
 		self.status.lengthSaved++;
-		self.baseLayer.fire('savetileend', self.status);
+		self.baseLayer.fire('saved1tile', self.status);
 		if (self.status.lengthSaved === self.status.lengthToBeSaved) {
 		  self.baseLayer.fire('tblevent', self.status);	// entire map saved
 		  self.setStorageSize();
@@ -304,10 +275,10 @@ var ControlSaveTiles = L.Control.extend( {
   },
 
   _extendSchema: async function (tbl) {			// replace db schema in Dexie.js
-  	// add: prefix table name with "+", delete: table name only
+  	// add table: prefix name with "+", delete: table name only
 	this._db.close();
-	var currSchema = this.status.tnames.reduce(function(obj, v) { obj[v] = ''; return obj; }, {})
-	var extendedSchema;
+	let currSchema = this.status.tnames.reduce(function(obj, v) { obj[v] = ''; return obj; }, {})
+	let extendedSchema;
 	if (tbl.startsWith('+')) {	//add
 		tbl = tbl.substring(1);
 		extendedSchema = { [tbl]: '' };

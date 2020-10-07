@@ -21,10 +21,10 @@ var TileLayerOffline = L.TileLayer.extend( {
   * @return {HTMLElement}     
   */
   createTile: function (coords, done) {
-    var tile = L.TileLayer.prototype.createTile.call(this, coords, done);
-    var url = tile.src;
+    let tile = L.TileLayer.prototype.createTile.call(this, coords, done);
+    let url = tile.src;
     tile.src = '';
-    var self = this;
+    let self = this;
     this._setDataUrl(url).then(function (dataurl) {
       tile.src = dataurl;
     }).catch(function () {	// not found in DB, get online
@@ -40,20 +40,20 @@ var TileLayerOffline = L.TileLayer.extend( {
    * @return {Promise} resolves to base64 url
    */
   _setDataUrl: function (url) {
-    var self = this;
+    let self = this;
     return new Promise(function (resolve, reject) {
-	if (self.dtable == null) {
-	    reject();
-	}
-	else {
-	    self.dtable.get(self._getStorageKey(url)).then(function (data) {
-	        if (data && typeof data === 'object') {
-	            resolve(URL.createObjectURL(data));
-	        } else {
-	            reject();
-	        }
-	    }).catch((e) => { reject(e); }); 
-	}
+      if (self.dtable == null) {
+        reject();
+      }
+      else {
+        self.dtable.get(self._getStorageKey(url)).then(function (data) {
+            if (data && typeof data === 'object') {
+                resolve(URL.createObjectURL(data));
+            } else {
+                reject();
+            }
+        }).catch((e) => { reject(e); }); 
+      }
     }); //dont catch here, handled upstream
   },
   /**
@@ -63,8 +63,8 @@ var TileLayerOffline = L.TileLayer.extend( {
    * @return {string} unique identifier.
    */
   _getStorageKey: function (url) {
-    var key;
-    var subdomainpos = this._url.indexOf('{s}');
+    let key;
+    let subdomainpos = this._url.indexOf('{s}');
     if (subdomainpos > 0) {
       key = url.substring(0, subdomainpos) +
         this.options.subdomains[0] +
@@ -79,19 +79,19 @@ var TileLayerOffline = L.TileLayer.extend( {
    * @return {object[]} the tile urls, key, url
    */
   getTileUrls: function (bounds, zoom) {	// used in control.saveMap only
-    var self = this;
-    var tiles = [];
-    var origurl = this._url;
+    let self = this;
+    let tiles = [];
+    let origurl = this._url;
     // getTileUrl uses current zoomlevel, we want to overwrite it
     this.setUrl(this._url.replace('{z}', zoom), true);
-    var tileBounds = L.bounds(
+    let tileBounds = L.bounds(
       bounds.min.divideBy(this.getTileSize().x).floor(),
       bounds.max.divideBy(this.getTileSize().x).floor()
     );
-    var url;
+    let url;
     for (var j = tileBounds.min.y; j <= tileBounds.max.y; j++) {
       for (var i = tileBounds.min.x; i <= tileBounds.max.x; i++) {
-        var tilePoint = new L.Point(i, j);
+        let tilePoint = new L.Point(i, j);
         url = L.TileLayer.prototype.getTileUrl.call(self, tilePoint);
         tiles.push({
           key: self._getStorageKey(url),

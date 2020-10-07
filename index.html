@@ -66,7 +66,7 @@ function showTables() {		// display offline map names with radiobuttons
 }
 
 function tblSelected() {	// set center to selected offline map
-	tblName = document.querySelector('input[name=mona]:checked').value;
+	let tblName = document.querySelector('input[name=mona]:checked').value;
 	if (tblName != '') {
 		saveControl.setTable(tblName);
 		saveControl.setStorageSize();
@@ -86,22 +86,22 @@ function toggleOffline() {	// toggle online/offline testing
 }
 
 function ctrlButton(html, container, fn) {
-		var link = L.DomUtil.create('a', null, container);
-		link.innerHTML = html;
-		link.href = '#';
-		L.DomEvent.on(link, 'click', fn);
-		return link;
-	}
+	let link = L.DomUtil.create('a', null, container);
+	link.innerHTML = html;
+	link.href = '#';
+	L.DomEvent.on(link, 'click', fn);
+	return link;
+}
 
 	// baselayer will use offline source if available
-	var baseLayer = L.tileLayer.offline('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	let baseLayer = L.tileLayer.offline('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 	    attribution: 'Map data &copy; OpenStreetMap',
 	    subdomains: 'abc',
 	    maxZoom: 16
 	});
 
 	// events while saving map tiles
-	var progress;
+	let progress;
 	baseLayer.on('savestart', function(e) {
 		progress = 0;
 		document.getElementById("total").innerHTML = e._tilesforSave.length;
@@ -113,76 +113,70 @@ function ctrlButton(html, container, fn) {
 	baseLayer.on('storagesize', function(e) {
 		document.getElementById('storage').innerHTML = e.storagesize;
 	});
-	baseLayer.on('tblevent', function(e) {
-		showTables();
-	});
 	baseLayer.on('loadend', function(e) {	// all tiles were saved
 		saveControl.putItem('centerLatLon', [map.getCenter().lat, map.getCenter().lng]);
 	});
-
+	baseLayer.on('tblevent', function(e) { showTables(); });
+	
 	// optional tile image for unaccessible tiles in offline testing
-	var img = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAA+SURBVChTYzh8+PB/BgIArgafYgw5bIpxGoAsgc8WMAApwKaICUqTBoiyGpsEhhhO3UAAl8OnCAYOHz78HwDR+TsTGQH1JAAAAABJRU5ErkJggg==';
+	let img = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAA+SURBVChTYzh8+PB/BgIArgafYgw5bIpxGoAsgc8WMAApwKaICUqTBoiyGpsEhhhO3UAAl8OnCAYOHz78HwDR+TsTGQH1JAAAAABJRU5ErkJggg==';
 	fetch(img).then(res => res.blob()).then((blob) => { 
-		var url = URL.createObjectURL(blob);
+		let url = URL.createObjectURL(blob);
 		baseLayer.options.offUrl = url;
 	});
 
 	// command buttons for saveControl
-    	var scContainer = L.DomUtil.create('div', 'leaflet-bar');
-    	ctrlButton('<i class="fa fa-download" aria-hidden="true" title="Save tiles"></i>', scContainer, 
-    	    function() {
-    		if (map.getZoom() >= saveControl.options.minimalZoom) 
-    			saveControl.saveMap();
+	let scContainer = L.DomUtil.create('div', 'leaflet-bar');
+	ctrlButton('<i class="fa fa-download" aria-hidden="true" title="Save tiles"></i>', scContainer, 
+		function() {
+		if (map.getZoom() >= saveControl.options.minimalZoom) 
+			saveControl.saveMap();
 		else 
 			confirm('Offline maps allowed minimal zoom level is set to '+saveControl.options.minimalZoom);
-    	});
-    	ctrlButton('<i class="fa fa-trash" aria-hidden="true"  title="Remove table"></i>', scContainer, () => {saveControl.rmContent();} );
+	});
+	ctrlButton('<i class="fa fa-trash" aria-hidden="true"  title="Remove table"></i>', scContainer,
+		function() {
+			let tblName = document.querySelector('input[name=mona]:checked').value;
+			saveControl.deleteTable(tblName);
+		} );
 
 	// add control to save/delete offline maps in area viewed
-	var saveControl = L.control.savetiles(baseLayer, {
+	let saveControl = L.control.savetiles(baseLayer, {
 	    minimalZoom: 10,
 	    //zoomlevels: [13,14,16], 	//optional specific zoomlevels to save
 	    confirmSave: function(status, saveCallback) {
-	    	var zrange = saveControl.options.zoomlevels ? saveControl.options.zoomlevels.join(',') : map.getZoom() +
-	    		 (map.getZoom()==saveControl._baseLayer.options.maxZoom ? '' : '-'+saveControl._baseLayer.options.maxZoom);
-		var newTname = prompt("Storage name for "+status._tilesforSave.length+" tiles (zoom "+zrange+")", "name1");
-		if (newTname == null || newTname == "") {
-			return;  // user cancelled the prompt
-		}
-		if (status.tnames.indexOf(newTname) >= 0)
-			if (!confirm('Map "' + newTname + '" exists. Overwrite?')) {
-				return;
+	    	let zrange = saveControl.options.zoomlevels ? saveControl.options.zoomlevels.join(',') : map.getZoom() +
+	    		 (map.getZoom()==saveControl.baseLayer.options.maxZoom ? '' : '-'+saveControl.baseLayer.options.maxZoom);
+			let newTname = prompt("Storage name for "+status._tilesforSave.length+" tiles (zoom "+zrange+")", "name1");
+			if (newTname == null || newTname == "") {
+				return;  // user cancelled the prompt
 			}
+			if (status.tnames.indexOf(newTname) >= 0)
+				if (!confirm('Map "' + newTname + '" exists. Overwrite?')) {
+					return;
+				}
 			saveCallback(newTname);
-	    },
-	    confirmRemoval: function(layer, successCallback) {
-		sel = document.querySelector('input[name=mona]:checked');
-		if (!sel) sel = document.querySelector('input[name=mona]')
-		if (!sel) return;
-		if (window.confirm('Delete table "' + sel.value + '" ?')) {
-			saveControl.deleteTable(sel.value);
-		}
-	    },
-	    visualUI: scContainer	// control 'invisible' if this line is commented out
+		},
+		visualUI: scContainer	// control 'invisible' if this line is commented out
 	});
 	saveControl.openDB();
 
 	// offline-testing button
-	var offBtn = L.control({position: 'topleft'});
+	let offBtn = L.control({position: 'topleft'});
 	offBtn.onAdd = function () {
-	    var container = L.DomUtil.create('div', 'leaflet-bar');
-	    var link = L.DomUtil.create('a', null, container); 
+	    let container = L.DomUtil.create('div', 'leaflet-bar');
+	    let link = L.DomUtil.create('a', null, container); 
 	    link.innerHTML = '<i class="fa fa-podcast" aria-hidden="true" title="Test On/Offline"></i>';
 	    link.style.backgroundColor = 'lightgreen';
 	    link.id = 'offButton';
 	    link.href = '#';
-	    var zum = L.DomUtil.create('div', null, container);
+	    let zum = L.DomUtil.create('div', null, container);
 	    zum.id = 'zoomValue';
 	    L.DomEvent.on(link, 'click', toggleOffline, this);
 	    return container;
 	};
 	
-	var map = L.map('map');
+	let map = L.map('map');
 	baseLayer.addTo(map);
 	saveControl.addTo(map);
 	offBtn.addTo(map);

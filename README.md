@@ -2,55 +2,77 @@ Leaflet.dexie.js
 ================
 A Leaflet plugin for offline maps storage using library [Dexie.js](https://github.com/dfahlander/Dexie.js).
 
-The source code is based on [leaflet.offline](https://github.com/allartk/leaflet.offline), which uses [localForage](https://github.com/localForage/localForage) to access indexedDB. 
-&emsp; In our opinion (after lots of coding & testing), [Dexie.js](https://github.com/dfahlander/Dexie.js) is a better solution than localForage - smaller size, efficient and well supported.
+The source code is based on [leaflet.offline](https://github.com/allartk/leaflet.offline) with the following differences:
+- instead of [localForage](https://github.com/localForage/localForage) and now [idb](https://github.com/jakearchibald/idb), 
+we use [dexie.js](https://github.com/dfahlander/Dexie.js) which is efficient, stable and well supported indexedDB library.
+- instead of having all maps in a single table(store), we save each map in its own table and can add other user-defined attributes like size, center, bounds, etc.
+
+### Dependencies
+- [leaflet.js](https://leafletjs.com/) - for map controls
+- [dexie.js](https://github.com/dfahlander/Dexie.js) - to store tiles in indexedDB asynchronously
 
 ### Demo
-The [Demo](https://helgasoft.github.io/leaflet.dexie/index.html) implements creation and deletion of offline maps and can simulate offline map display.
+The [Demo](index.html) implements creation and deletion of offline maps and can simulate offline map display.
+
+### Usage
+Main usage is for offline maps, but could be also used to store other information. [API documentation](https://github.com/helgasoft/leaflet.dexie/blob/master/docs/api.md).
+
+### Manual installation
+Download [leaflet.dexie.min.js](https://raw.githubusercontent.com/helgasoft/leaflet.dexie/master/dist/leaflet.dexie.min.js) and add it in a script tag to your page after leaflet and dexie. See code below.
 
 ### Minimal code sample
 ```html
 <!doctype html>
 <html>
  <head>
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.1/dist/leaflet.css" />
-	<script src="https://unpkg.com/leaflet@1.3.1/dist/leaflet.js"></script>   
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>   
 	<script src="https://unpkg.com/dexie/dist/dexie.min.js"></script>
-	<script src="leaflet.dexie.min.js"></script>
+	<script src="js/leaflet.dexie.min.js"></script>
  </head>
  <body>
 	<div id="map" style="height: 75vh"></div>
-	press F12 to inspect, watch IndexedDB in tab <i>Application</i>(Chrome), <i>Storage</i>(FF) or <i>Debugger</i>(Edge)
+<p>
+	<input type='button' value='Save map' onclick='savem()' />
+	<input type='button' value='Delete map' onclick='delm()' />
+</p>
+	press F12 to watch IndexedDB in tab <i>Application</i>(Chrome), <i>Storage</i>(FF) or <i>Debugger</i>(Edge)
   <script>
-	var baseLayer = L.tileLayer.offline('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxZoom: 16});
-	var control = L.control.savetiles(baseLayer, {});
-
-	var map = L.map('map');
+	let map = L.map('map');
+	map.setView(L.latLng(47.2572, 3.6842), 18);
+	let baseLayer = L.tileLayer.offline('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { subdomains: 'abc', maxZoom: 18});
 	baseLayer.addTo(map);
+	let control = L.control.savetiles(baseLayer, {
+	    'confirmSave': function(status, saveCallback) {
+			var newTname = prompt("Please enter map name ("+status._tilesforSave.length+" tiles):", "");
+			if (newTname == null || newTname == "") return;  // user cancelled the prompt
+			saveCallback(newTname);
+	    }
+	});
 	control.addTo(map);
+	control.openDB();
 
-	const tblName = 'test';
-	control._db.version(1).stores( { [tblName]: '' });	// create table
-	control.openDB().then(() => {
-		control.setTable(tblName);
-		control.putItem('mapCenter', { lat: 47.2572, lng: 3.6842 });		// write
-	}).then(() => {
-		control.getItem('mapCenter').then(value => map.setView(value, 14));	// read
-	}).catch(err => alert(err.message));
+	savem = function() {
+		control.setBounds(map.getBounds());
+		control.saveMap();
+	}
+	delm = function() {
+		control.deleteTable(control.dtable.name);
+	}
+	baseLayer.on('loadend', function(e) {	// all tiles just saved
+		control.putItem('mapSize', e.mapSize);
+		control.getItem('mapSize').then( (msize) => {
+			alert("size of map '"+ control.dtable.name +"' is "+ msize +' bytes');
+		});
+	});
   </script>
  </body>
 </html>
 ```
 
-### Usage
-Main usage is for offline maps, but could be also used to store other Leaflet information.
-
-### Manual installation
-Download [leaflet.dexie.min.js](https://github.com/helgasoft/leaflet.dexie/blob/master/dist/leaflet.dexie.min.js) and add it in a script tag to your page after leaflet and dexie.
-
 ### IndexedDB
 [indexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) is the standard database in the browser.
-Press F12 to open inspection, watch IndexedDB in tab *Application*(Chrome), *Storage*(FF) or *Debugger*(Edge).
+Press F12 to open inspection, watch IndexedDB in tab *Application*(Chrome), *Storage*(FF) or *Debugger*(Edge). The database name is *leaflet-maps*. Watch also tab *Console* for errors.
 
 ![indexedDB table](devtools.png)
 

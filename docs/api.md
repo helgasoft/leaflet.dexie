@@ -19,16 +19,16 @@
 <dt><a href="#setTable">setTable(table)</a></dt>
 <dd><p>Sets the current DB table for Control and its TileLayer</p>
 </dd>
-<dt><a href="#deleteTable">deleteTable(table)</a> ⇒ <code>Promise</code></dt>
+<dt><a href="#deleteTable">deleteTable(table)</a> ⇒ <code>Promise.&lt;void&gt;</code></dt>
 <dd><p>Delete a table from DB</p>
 </dd>
-<dt><a href="#putItem">putItem(table)</a> ⇒ <code>Promise</code></dt>
+<dt><a href="#putItem">putItem(table)</a> ⇒ <code>Promise.&lt;void&gt;</code></dt>
 <dd><p>Add/Update an item in DB table</p>
 </dd>
-<dt><a href="#getItem">getItem(table)</a> ⇒ <code>Promise</code></dt>
+<dt><a href="#getItem">getItem(table)</a> ⇒ <code>Promise.&lt;void&gt;</code></dt>
 <dd><p>Get an item in DB table</p>
 </dd>
-<dt><a href="#deleteItem">deleteItem(table)</a> ⇒ <code>Promise</code></dt>
+<dt><a href="#deleteItem">deleteItem(table)</a> ⇒ <code>Promise.&lt;void&gt;</code></dt>
 <dd><p>Delete an item in DB table</p>
 </dd>
 <dt><a href="#setZoomlevels">setZoomlevels(zoomlevels)</a></dt>
@@ -37,11 +37,12 @@
 <dt><a href="#setBounds">setBounds(bounds)</a></dt>
 <dd><p>Set Lat/Lng bounds of map to save</p>
 </dd>
-<dt><a href="#saveMap">saveMap()</a></dt>
-<dd><p>Save all map tiles in DB async after name confirmation. Fires event &#39;savestart&#39;.</p>
-</dd>
 <dt><a href="#setStorageSize">setStorageSize(function)</a></dt>
-<dd><p>Sets status.storagesize to count of table rows</p>
+<dd><p>Sets status.storagesize equal to count of table rows</p>
+</dd>
+<dt><a href="#saveMap">saveMap()</a></dt>
+<dd><p>Prepare zoom levels to download and activate callback function to
+save(async) all map tiles on table name confirmation. Fires event &#39;savestart&#39;.</p>
 </dd>
 <dt><a href="#getTileUrls">getTileUrls(zoom)</a> ⇒ <code>Array.&lt;object&gt;</code></dt>
 <dd><p>getTileUrls for single zoomlevel</p>
@@ -124,11 +125,11 @@ Sets the current DB table for Control and its TileLayer
 
 <a name="deleteTable"></a>
 
-## deleteTable(table) ⇒ <code>Promise</code>
+## deleteTable(table) ⇒ <code>Promise.&lt;void&gt;</code>
 Delete a table from DB
 
 **Kind**: global function  
-**Returns**: <code>Promise</code> - fires 'tblevent'  
+**Returns**: <code>Promise.&lt;void&gt;</code> - fires event 'tblevent' to refresh table list  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -136,11 +137,11 @@ Delete a table from DB
 
 <a name="putItem"></a>
 
-## putItem(table) ⇒ <code>Promise</code>
+## putItem(table) ⇒ <code>Promise.&lt;void&gt;</code>
 Add/Update an item in DB table
 
 **Kind**: global function  
-**Returns**: <code>Promise</code> - operation result  
+**Returns**: <code>Promise.&lt;void&gt;</code> - operation result  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -148,11 +149,11 @@ Add/Update an item in DB table
 
 <a name="getItem"></a>
 
-## getItem(table) ⇒ <code>Promise</code>
+## getItem(table) ⇒ <code>Promise.&lt;void&gt;</code>
 Get an item in DB table
 
 **Kind**: global function  
-**Returns**: <code>Promise</code> - operation result  
+**Returns**: <code>Promise.&lt;void&gt;</code> - operation result  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -160,11 +161,11 @@ Get an item in DB table
 
 <a name="deleteItem"></a>
 
-## deleteItem(table) ⇒ <code>Promise</code>
+## deleteItem(table) ⇒ <code>Promise.&lt;void&gt;</code>
 Delete an item in DB table
 
 **Kind**: global function  
-**Returns**: <code>Promise</code> - operation result  
+**Returns**: <code>Promise.&lt;void&gt;</code> - operation result  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -192,16 +193,10 @@ Set Lat/Lng bounds of map to save
 | --- | --- | --- |
 | bounds | <code>LatLngBounds</code> | [https://leafletjs.com/reference-0.7.7.html#latlngbounds](https://leafletjs.com/reference-0.7.7.html#latlngbounds) |
 
-<a name="saveMap"></a>
-
-## saveMap()
-Save all map tiles in DB async after name confirmation. Fires event 'savestart'.
-
-**Kind**: global function  
 <a name="setStorageSize"></a>
 
 ## setStorageSize(function)
-Sets status.storagesize to count of table rows
+Sets status.storagesize equal to count of table rows
 
 **Kind**: global function  
 
@@ -209,6 +204,12 @@ Sets status.storagesize to count of table rows
 | --- | --- | --- |
 | function | <code>callback</code> | to get the count |
 
+<a name="saveMap"></a>
+
+## saveMap()
+Prepare zoom levels to download and activate callback function tosave(async) all map tiles on table name confirmation. Fires event 'savestart'.
+
+**Kind**: global function  
 <a name="getTileUrls"></a>
 
 ## getTileUrls(zoom) ⇒ <code>Array.&lt;object&gt;</code>
