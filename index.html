@@ -18,7 +18,7 @@
       <div class="col-md-12">
       Demo <a class="navbar-brand" href="https://github.com/helgasoft/leaflet.dexie">leaflet.dexie</a>- offline maps<br />
       &#x2780; Zoom to area of interest. Zoom level will show under green button. Level 14+ recommended.<br />
-      &#x2781; Hit button Download, name the table, observe tile save progress on the counter outside the map.<br />
+      &#x2781; Hit download button <i class="fa fa-download"></i> , name the table, observe tile save progress on the counter outside the map.<br />
       &nbsp; &nbsp; <i>hint: remember zoom level or include it in table's name, so it's easily retrievable in offline mode.</i><br />
       &#x2782; Hit green button <i class="fa fa-podcast"></i> to toggle Offline, select a table from the list, zoom to its minimal level to see tiles.<br />
       &nbsp; &nbsp; <i>hint: zoom in/out with the &plusmn; buttons, not mouse wheel, to remain in offline map center</i><br />
@@ -31,7 +31,7 @@
       </div>
       <div class="col-md-3">
 		<p>Progress: <span id="progress"></span> of <span id="total"></span></p>
-		<p>Current storage: <span id="storage"></span> items</p>
+		<p>Current table: <span id="storage"></span> items</p>
 		<div id='tblList' style='margin-left:12px;'>No offline maps</div>
       </div>
     </div>
@@ -147,7 +147,7 @@ function ctrlButton(html, container, fn) {
 	    confirmSave: function(status, saveCallback) {
 	    	let zrange = saveControl.options.zoomlevels ? saveControl.options.zoomlevels.join(',') : map.getZoom() +
 	    		 (map.getZoom()==saveControl.baseLayer.options.maxZoom ? '' : '-'+saveControl.baseLayer.options.maxZoom);
-			let newTname = prompt("Storage name for "+status._tilesforSave.length+" tiles (zoom "+zrange+")", "name1");
+			let newTname = prompt("Table name for "+status._tilesforSave.length+" tiles (zoom "+zrange+")", "name1");
 			if (newTname == null || newTname == "") {
 				return;  // user cancelled the prompt
 			}

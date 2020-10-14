@@ -5,17 +5,17 @@ A Leaflet plugin for offline maps storage using library [Dexie.js](https://githu
 The source code is based on [leaflet.offline](https://github.com/allartk/leaflet.offline) with the following differences:
 - instead of [localForage](https://github.com/localForage/localForage) and now [idb](https://github.com/jakearchibald/idb), 
 we use [dexie.js](https://github.com/dfahlander/Dexie.js) which is efficient, stable and well supported indexedDB library.
-- instead of having all maps in a single table(store), we save each map in its own table and can add other user-defined attributes like size, center, bounds, etc.
+- instead of having all maps in a single table(store), each map is saved in its own table and can add other user-defined attributes like size, center, bounds, etc.
 
 ### Dependencies
 - [leaflet.js](https://leafletjs.com/) - for map controls
 - [dexie.js](https://github.com/dfahlander/Dexie.js) - to store tiles in indexedDB asynchronously
 
 ### Demo
-The [Demo](index.html) implements creation and deletion of offline maps and can simulate offline map display.
+The [Demo](https://helgasoft.github.io/leaflet.dexie/index.html) implements creation and deletion of offline maps and can simulate offline map display.
 
 ### Usage
-Main usage is for offline maps, but could be also used to store other information. [API documentation](https://github.com/helgasoft/leaflet.dexie/blob/master/docs/api.md).
+Main usage is for offline maps, but could be also used to store other information. [API documentation](https://github.com/helgasoft/leaflet.dexie/blob/master/docs/api.md) is available.
 
 ### Manual installation
 Download [leaflet.dexie.min.js](https://raw.githubusercontent.com/helgasoft/leaflet.dexie/master/dist/leaflet.dexie.min.js) and add it in a script tag to your page after leaflet and dexie. See code below.
