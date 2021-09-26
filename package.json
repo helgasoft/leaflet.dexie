@@ -64,7 +64,7 @@
   "dependencies": {
     "dexie": "^3.0.2",
     "axios": ">=0.21.1",
-    "object-path": ">=0.11.6",
+    "object-path": ">=0.11.8",
     "yargs": ">=16.2.0",
     "object-to-spawn-args": ">=2.0.0"
   },
