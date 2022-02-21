@@ -12,13 +12,13 @@ we use [dexie.js](https://github.com/dfahlander/Dexie.js) which is efficient, st
 - [dexie.js](https://github.com/dfahlander/Dexie.js) - to store tiles in indexedDB asynchronously
 
 ### Demo
-The [Demo](https://helgasoft.github.io/leaflet.dexie/index.html) implements creation and deletion of offline maps and can simulate offline map display.
+The [Demo](https://helgasoft.github.io/leaflet.dexie/demo/index.html) implements creation and deletion of offline maps and can simulate offline map display.
 
 ### Usage
 Main usage is for offline maps, but could be also used to store other information. [API documentation](https://github.com/helgasoft/leaflet.dexie/blob/master/docs/api.md) is available.
 
 ### Manual installation
-Download [leaflet.dexie.min.js](https://raw.githubusercontent.com/helgasoft/leaflet.dexie/master/dist/leaflet.dexie.min.js) and add it in a script tag to your page after leaflet and dexie. See code below.
+Add a &lt;script&gt; tag to your HTML page after _leaflet_ and _dexie_. You can web-load the script, or download [leaflet.dexie.min.js](https://raw.githubusercontent.com/helgasoft/leaflet.dexie/master/dist/leaflet.dexie.min.js) and load it locally. See code below.
 
 ### Minimal code sample
 ```html
@@ -27,8 +27,11 @@ Download [leaflet.dexie.min.js](https://raw.githubusercontent.com/helgasoft/leaf
  <head>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>   
-	<script src="https://unpkg.com/dexie/dist/dexie.min.js"></script>
-	<script src="js/leaflet.dexie.min.js"></script>
+	<script src="https://unpkg.com/dexie@latest/dist/dexie.js"></script>
+
+	<script src="https://cdn.jsdelivr.net/gh/helgasoft/leaflet.dexie/dist/leaflet.dexie.min.js"></script>
+	<!--   or local copy:
+	<script src="js/leaflet.dexie.min.js"></script>  -->
  </head>
  <body>
 	<div id="map" style="height: 75vh"></div>
@@ -36,7 +39,7 @@ Download [leaflet.dexie.min.js](https://raw.githubusercontent.com/helgasoft/leaf
 	<input type='button' value='Save map' onclick='savem()' />
 	<input type='button' value='Delete map' onclick='delm()' />
 </p>
-	press F12 to watch IndexedDB in tab <i>Application</i>(Chrome), <i>Storage</i>(FF) or <i>Debugger</i>(Edge)
+	press F12 to watch IndexedDB/leaflet-maps in tab <i>Application</i>(Chrome), <i>Storage</i>(FF) or <i>Debugger</i>(Edge)
   <script>
 	let map = L.map('map');
 	map.setView(L.latLng(47.2572, 3.6842), 18);
