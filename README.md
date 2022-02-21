@@ -1,9 +1,9 @@
 Leaflet.dexie.js
 ================
-A Leaflet plugin for offline maps storage using library [Dexie.js](https://github.com/dfahlander/Dexie.js).
+A Leaflet plugin for **offline maps** storage using library [Dexie.js](https://github.com/dfahlander/Dexie.js).
 
 The source code is based on [leaflet.offline](https://github.com/allartk/leaflet.offline) with the following differences:
-- instead of [localForage](https://github.com/localForage/localForage) and now [idb](https://github.com/jakearchibald/idb), 
+- instead of [idb](https://github.com/jakearchibald/idb), 
 we use [dexie.js](https://github.com/dfahlander/Dexie.js) which is efficient, stable and well supported indexedDB library.
 - instead of having all maps in a single table(store), each map is saved in its own table and can add other user-defined attributes like size, center, bounds, etc.
 
@@ -18,7 +18,7 @@ The [Demo](https://helgasoft.github.io/leaflet.dexie/demo/index.html) implements
 Main usage is for offline maps, but could be also used to store other information. [API documentation](https://github.com/helgasoft/leaflet.dexie/blob/master/docs/api.md) is available.
 
 ### Manual installation
-Add a &lt;script&gt; tag to your HTML page after _leaflet_ and _dexie_. You can web-load the script, or download [leaflet.dexie.min.js](https://raw.githubusercontent.com/helgasoft/leaflet.dexie/master/dist/leaflet.dexie.min.js) and load it locally. See code below.
+Add a &lt;script&gt; tag to your HTML page after _leaflet_ and _dexie_. You can web-load the script, or download file [leaflet.dexie.min.js](https://raw.githubusercontent.com/helgasoft/leaflet.dexie/master/dist/leaflet.dexie.min.js) and load it locally. See code below.
 
 ### Minimal code sample
 ```html
@@ -75,7 +75,7 @@ Add a &lt;script&gt; tag to your HTML page after _leaflet_ and _dexie_. You can 
 
 ### IndexedDB
 [indexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) is the standard database in the browser.
-Press F12 to open inspection, watch IndexedDB in tab *Application*(Chrome), *Storage*(FF) or *Debugger*(Edge). The database name is *leaflet-maps*. Watch also tab *Console* for errors.
+Press F12 to open inspection sidebar, hit tab *Application*(Chrome), *Storage*(FF) or *Debugger*(Edge) and watch IndexedDB. The database name is *leaflet-maps*. Watch also tab *Console* for errors.
 
-![indexedDB table](devtools.png)
+![indexedDB table](demo/devtools.png)
 
